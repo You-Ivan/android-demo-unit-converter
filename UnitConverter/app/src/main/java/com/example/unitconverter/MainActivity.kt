@@ -22,10 +22,15 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
 import com.example.unitconverter.ui.theme.UnitConverterTheme
 
 class MainActivity : ComponentActivity() {
@@ -38,17 +43,55 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    UnitConverter()
+                    UnitConverter(UnitConverterViewModel())
                 }
             }
         }
     }
 }
 
-val UNIT_OPTIONS = listOf("Meter", "Centimeter", "Inch", "Feet")
+enum class UNIT(val factor: Double) {
+    Select(-1.0),
+    Meter(100.0),
+    Centimeter(1.0),
+    Inch(2.54),
+    Feet(30.48),
+}
+
+class UnitConverterViewModel : ViewModel() {
+    var inputUnit by mutableStateOf(UNIT.Select)
+    var outputUnit by mutableStateOf(UNIT.Select)
+    var inputValue by mutableStateOf("")
+    var resultValue by mutableStateOf("")
+
+    private fun convert() {
+        val input = inputValue.toDoubleOrNull() ?: return
+        if (inputUnit != UNIT.Select && outputUnit != UNIT.Select) {
+            val result = (input * inputUnit.factor * 100 / outputUnit.factor) / 100
+            resultValue = result.toString()
+        }
+    }
+
+    fun updateInputUnit(unit: UNIT) {
+        inputUnit = unit
+        convert()
+    }
+
+    fun updateOutputUnit(unit: UNIT) {
+        outputUnit = unit
+        convert()
+    }
+
+    fun updateInputValue(value: String) {
+        inputValue = value
+        convert()
+    }
+}
+
 
 @Composable
-fun UnitConverter() {
+fun UnitConverter(viewModel: UnitConverterViewModel) {
+
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
@@ -58,36 +101,64 @@ fun UnitConverter() {
             Text(text = "Unit Converter")
         }
         Spacer(modifier = Modifier.height(16.dp))
-        Row {
-            OutlinedTextField(
-                value = "",
-                onValueChange = {},
-                placeholder = { Text(text = "Place enter a number") })
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            OutlinedTextField(modifier = Modifier
+                .width(150.dp)
+                .height(60.dp),
+                value = viewModel.inputValue,
+                label = { Text(text = "Enter Value") },
+                onValueChange = { viewModel.updateInputValue(it) })
+            Spacer(modifier = Modifier.width(16.dp))
+            DropdownBtn(viewModel.inputUnit) {
+                viewModel.updateInputUnit(it)
+            }
         }
         Spacer(modifier = Modifier.height(16.dp))
-        Row {
-            DropdownBtn("Select", UNIT_OPTIONS)
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            OutlinedTextField(
+                modifier = Modifier
+                    .width(150.dp)
+                    .height(60.dp),
+                value = viewModel.resultValue,
+                onValueChange = {},
+                enabled = false
+            )
             Spacer(modifier = Modifier.width(16.dp))
-            DropdownBtn("Select", UNIT_OPTIONS)
-
+            DropdownBtn(viewModel.outputUnit) {
+                viewModel.updateOutputUnit(it)
+            }
         }
     }
 }
 
 @Composable
-fun DropdownBtn(description: String, options: List<String>) {
+fun DropdownBtn(selectedUnit: UNIT, onSelect: (UNIT) -> Unit) {
+    var expand by remember {
+        mutableStateOf(false)
+    }
     Box {
-        Button(onClick = { /*TODO*/ }) {
-            Text(text = description)
+        Button(onClick = { expand = true }, modifier = Modifier.width(120.dp)) {
+            Text(text = selectedUnit.name)
             Icon(
                 imageVector = Icons.Default.ArrowDropDown,
                 contentDescription = "Arrow Down"
             )
-            DropdownMenu(expanded = true, onDismissRequest = { /*TODO*/ }) {
-                options.forEach {
+        }
+        DropdownMenu(expanded = expand, onDismissRequest = { expand = false }) {
+            UNIT.entries.forEach {
+                if (it != UNIT.Select) {
                     DropdownMenuItem(
-                        text = { Text(text = it) },
-                        onClick = { /*TODO*/ })
+                        text = { Text(text = it.toString()) },
+                        onClick = {
+                            onSelect(it)
+                            expand = false
+                        })
                 }
             }
         }
@@ -97,7 +168,7 @@ fun DropdownBtn(description: String, options: List<String>) {
 @Composable
 @Preview(showBackground = true)
 fun PreviewUnitConverter() {
-    UnitConverter()
+    UnitConverter(UnitConverterViewModel())
 }
 
 
