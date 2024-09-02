@@ -59,7 +59,7 @@ enum class UNIT(val factor: Double) {
 }
 
 class UnitConverterViewModel : ViewModel() {
-    var inputUnit by mutableStateOf(UNIT.Select)
+    var inputUnit by  mutableStateOf(UNIT.Select)
     var outputUnit by mutableStateOf(UNIT.Select)
     var inputValue by mutableStateOf("")
     var resultValue by mutableStateOf("")
