@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Button
@@ -28,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
@@ -65,7 +67,7 @@ class UnitConverterViewModel : ViewModel() {
     var resultValue by mutableStateOf("")
 
     private fun convert() {
-        val input = inputValue.toDoubleOrNull() ?: return
+        val input = inputValue.toDoubleOrNull() ?: 0.0
         if (inputUnit != UNIT.Select && outputUnit != UNIT.Select) {
             val result = (input * inputUnit.factor * 100 / outputUnit.factor) / 100
             resultValue = result.toString()
@@ -110,6 +112,7 @@ fun UnitConverter(viewModel: UnitConverterViewModel) {
                 .height(60.dp),
                 value = viewModel.inputValue,
                 label = { Text(text = "Enter Value") },
+                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
                 onValueChange = { viewModel.updateInputValue(it) })
             Spacer(modifier = Modifier.width(16.dp))
             DropdownBtn(viewModel.inputUnit) {
